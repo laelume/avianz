@@ -3,7 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name="avianz",
     version="0.1.0",
-    packages=find_packages(),
+    package_dir={"": "."},
+    packages=find_packages(where="."),
     python_requires=">=3.8",
     install_requires=[
         "click==8.2.1",

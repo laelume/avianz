@@ -20,11 +20,11 @@
 
 # Code to extract segments from sound files
 
-from src.core import spectrogram
-from src.core import config_loader
-from src.core import audio_data
-from src.utils import shapes
-from src.models import inference
+from avianz.src.core import spectrogram
+from avianz.src.core import config_loader
+from avianz.src.core import audio_data
+from avianz.src.utils import shapes
+from avianz.src.models import inference
 
 import numpy as np
 import scipy.ndimage as spi

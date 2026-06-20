@@ -27,9 +27,9 @@ from PyQt6.QtWidgets import QLabel, QPushButton, QComboBox, QWizard, QWizardPage
 
 import pyqtgraph as pg
 
-from src.ui.components.file_list import LightedFileList
-from src.core import config_loader
-from src.core import training
+from avianz.src.ui.components.file_list import LightedFileList
+from avianz.src.core import config_loader
+from avianz.src.core import training
 
 
 

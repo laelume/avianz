@@ -59,7 +59,7 @@
     "ColourPossible": [255, 255, 0, 100],
 
     "SoundFileDir": "./Sound Files",
-    "FiltersDir": "Filters",
+    "FiltersDir": "../Filters",
     "BirdListShort": "ListCommonBirds.txt",
     "BirdListLong": "ListDOCBirds.txt",
     "KnownCallsList": "ListKnownCalls.txt",

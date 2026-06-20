@@ -26,8 +26,13 @@ from itertools import chain, repeat
 import numpy as np
 import copy
 
-from src.core import audio_data
-from src.core import spectrogram
+# from src.core import audio_data
+# from src.core import spectrogram
+
+from . import audio_data
+from . import spectrogram
+
+
 
 def butterworth_bandpass(data,sampleRate,low=0,high=None,band=0.005):
     """ Basic IIR bandpass filter.

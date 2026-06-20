@@ -20,16 +20,16 @@
 
 # Wavelet segmentation
 
-from src.core import wavelet_functions
+from avianz.src.core import wavelet_functions
 import resampy
 import copy
 import numpy as np
 import time, os, math, csv, gc
-from src.core import spectrogram
-from src.core import segmentation
-from src.core import signal_proc
-from ext import ce_denoise as ce
-from ext import ce_detect
+from avianz.src.core import spectrogram
+from avianz.src.core import segmentation
+from avianz.src.core import signal_proc
+from avianz.ext import ce_denoise as ce
+from avianz.ext import ce_detect
 from itertools import combinations
 
 

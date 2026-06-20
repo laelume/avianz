@@ -24,13 +24,21 @@ import os, re
 import time
 import soundfile as sf
 
-from src.core import spectrogram
-from src.core import annotation
-from src.core import config_loader
-from src.core import batch_log
-from src.core import bird_detector
-from src.core import bat_detector
-from src.core import segmentation
+# from src.core import spectrogram
+# from src.core import annotation
+# from src.core import config_loader
+# from src.core import batch_log
+# from src.core import bird_detector
+# from src.core import bat_detector
+# from src.core import segmentation
+
+from . import spectrogram
+from . import annotation
+from . import config_loader
+from . import batch_log
+from . import bird_detector
+from . import bat_detector
+from . import segmentation
 
 # Constants
 SAMPLES_PER_PAGE_16KHZ = 900 * 16000

@@ -25,8 +25,12 @@ import tempfile
 import shutil
 import soundfile as sf
 # import pyflac as np
-from src.utils import wavio
-from src.core import audio_data
+
+# from src.utils import wavio
+# from src.core import audio_data
+
+from avianz.src.utils import wavio
+from avianz.src.core import audio_data
 
 class AudioLoader:
     """Centralized audio file loading with format detection and validation."""

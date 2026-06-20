@@ -22,9 +22,9 @@
 
 import math
 import numpy as np
-from src.core import annotation
-from src.models import inference
-from src.utils.exceptions import GentleExitException
+from avianz.src.core import annotation
+from avianz.src.models import inference
+from avianz.src.utils.exceptions import GentleExitException
 from scipy import ndimage
         
 class BatDetector:

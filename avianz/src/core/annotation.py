@@ -20,7 +20,7 @@
 
 # Data objects for handling segments
 
-from src.core import message_popup
+from avianz.src.core import message_popup
 
 import numpy as np
 import json

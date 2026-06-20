@@ -55,3 +55,4 @@ archive/
 environ-10.yml
 
 *.egg
+*.egg-info

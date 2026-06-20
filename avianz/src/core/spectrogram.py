@@ -27,9 +27,13 @@ from scipy.stats import boxcox
 import resampy
 from PIL import Image
 
-from src.core import signal_proc
-from src.core import audio_loader
-from src.core import audio_data
+# from src.core import signal_proc
+# from src.core import audio_loader
+# from src.core import audio_data
+
+from . import signal_proc
+from . import audio_loader
+from . import audio_data
 
 BAT_SPECTROGRAM_TIME_PER_PIXEL = 0.002909090909090909
 

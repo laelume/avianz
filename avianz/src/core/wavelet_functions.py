@@ -25,11 +25,11 @@ import math
 # import scipy.fftpack as fft
 from scipy import signal
 import pyfftw
-from ext import ce_denoise as ce
+from avianz.ext import ce_denoise as ce
 import time
-from src.utils import wavelet
-from src.core import spectrogram
-from src.core import signal_proc
+from avianz.src.utils import wavelet
+from avianz.src.core import spectrogram
+from avianz.src.core import signal_proc
 
 # A pair of helper functions that are often useful:
 def graycode(n):

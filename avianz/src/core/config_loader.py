@@ -22,8 +22,8 @@
 
 import os
 import json
-from src.core import message_popup
-from src.models import model_loader
+from avianz.src.core import message_popup
+from avianz.src.models import model_loader
 
 
 class ConfigLoader:

@@ -23,10 +23,10 @@
 import gc
 import copy
 
-from src.core import segmentation
-from src.core import annotation
-from src.core import wavelet_segment
-from src.utils.exceptions import GentleExitException
+from avianz.src.core import segmentation
+from avianz.src.core import annotation
+from avianz.src.core import wavelet_segment
+from avianz.src.utils.exceptions import GentleExitException
 
 
 class BirdDetector:

@@ -22,8 +22,8 @@
 
 import math
 import numpy as np
-from ext import ce_denoise
-from src.utils import IF as IFreq
+from avianz.ext import ce_denoise
+from avianz.src.utils import IF as IFreq
 
 class Shape():
     """ Container for storing a shape.
