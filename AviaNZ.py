@@ -146,6 +146,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 raise
 
     # copy over filters to ~/.avianz/Filters/:
+    # consider future support for subdirectories
     filterdir = os.path.join(configdir, "Filters/")
     if not os.path.isdir(filterdir):
         print("Creating filter dir %s" % filterdir)
@@ -159,6 +160,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
             except Exception as e:
                 print("Warning: failed to copy recogniser %s to %s" % (ff, filterdir))
                 print(e)
+
 
     # run splash screen:
     if cli:
@@ -223,7 +225,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 print("ERROR: valid input file (-f) is needed")
                 raise
     else:
-        task = None
+        # task = None # removed because we want to load from preset config state to speed up the process. 
         print("Starting AviaNZ in GUI mode")
         from PyQt6.QtWidgets import QApplication
         from PyQt6 import QtCore
@@ -238,8 +240,30 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
         # a hack to fix default font size (Win 10 suggests 7 pt for QLabels for some reason)
         QApplication.setFont(QApplication.font("QMenu"))
 
+        # (つ -' _ '- )つ
+
+        # read previous session state from config to restore task and audio file on relaunch
+        _prev_audio_file = config.get("previousFile", "")
+        _prev_task = config.get("previousMode", None)
+        if _prev_task not in (1, 2, 3, 4):
+            _prev_task = None
+        print("Previous session: task=%s, file=%s" % (_prev_task, _prev_audio_file))
+
+        # seed task from previous session to skip splash screen on relaunch
+        task = _prev_task
+
+        # saves session state to AviaNZconfig.txt after dialogs complete, before main window loads
+        def _save_preset(avianz_instance):
+            _cfg = confloader.config(os.path.join(configdir, "AviaNZconfig.txt"))
+            _cfg["previousMode"] = task
+            _cfg["previousFile"] = avianz_instance.filename if hasattr(avianz_instance, "filename") and avianz_instance.filename else ""
+            confloader.configwrite(_cfg, os.path.join(configdir, "AviaNZconfig.txt"))
+            print("Session state saved to AviaNZconfig.txt")
+
+        # (つ -' _ '- )つ
+        
         while True:
-            # splash screen?
+            # Opens startup splash screen
             if task is None:
                 # This screen asks what you want to do, then processes the response
                 from src.ui.dialogs.start_screen import StartScreen
@@ -248,10 +272,13 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 app.exec()
                 task = first.getValues()
 
+            # Initialize to previous task for skip splash screen on relaunch
             avianz = None
             if task == 1:
                 from src.ui import manual_interface
-                avianz = manual_interface.ManualInterface(configdir=configdir)
+                # Loads config from file
+                avianz = manual_interface.ManualInterface(configdir=configdir, firstFile=_prev_audio_file, on_ready=_save_preset)
+                # avianz = manual_interface.ManualInterface(configdir=configdir)
             elif task==2:
                 from src.ui import batch_interface
                 avianz = batch_interface.BatchInterface(configdir=configdir)

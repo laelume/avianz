@@ -26,12 +26,26 @@ If you use this software, please credit us in any papers that you write. An appr
 }
 ```
 
-
 # Installation
+
+## Supports up to Python 3.10
+
+<!-- '''
+conda env create -f environment-12.yml -y
+''' -->
 
 ## Windows
 Windows binaries are available at http://www.avianz.net.
 To install from source, follow the Linux instructions.
+
+- Remember to include a C compiler such as VS Build Tools, and make sure to check "Desktop development with C++"
+'''
+(PS)
+winget install Microsoft.VisualStudio.2022.BuildTools
+<!-- OR POSSIBLY (PS): winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools" -->
+'''
+(then restart PC)
+
 
 ## macOS
 An installer script is available at http://www.avianz.net.

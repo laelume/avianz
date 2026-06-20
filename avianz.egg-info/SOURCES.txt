@@ -1,0 +1,19 @@
+LICENSE.txt
+README.md
+pyproject.toml
+setup.py
+Config/__init__.py
+Filters/__init__.py
+Sound Files/__init__.py
+avianz.egg-info/PKG-INFO
+avianz.egg-info/SOURCES.txt
+avianz.egg-info/dependency_links.txt
+avianz.egg-info/requires.txt
+avianz.egg-info/top_level.txt
+ext/__init__.py
+ext/setup.py
+hooks/__init__.py
+hooks/hook-astor.py
+hooks/hook-librosa.py
+hooks/hook-spectrum.py
+hooks/hook-tensorflow.py

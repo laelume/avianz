@@ -24,7 +24,7 @@ import os
 import tempfile
 import shutil
 import soundfile as sf
-import pyflac
+# import pyflac as np
 from src.utils import wavio
 from src.core import audio_data
 
@@ -49,7 +49,8 @@ class AudioLoader:
         if ext == '.wav':
             return self.load_wav(filepath, duration, offset, silent)
         elif ext == '.flac':
-            return self.load_flac(filepath, duration, offset, silent)
+            # return self.load_flac(filepath, duration, offset, silent)
+            return self.load_flac_array(filepath, duration, offset, silent)
         else:
             raise ValueError(f"Unsupported file extension: {ext}")
     
@@ -124,3 +125,26 @@ class AudioLoader:
             pyf = pyflac.FileDecoder(filepath, temp_wav_path)
             pyf.process()
             return self.load_wav(temp_wav_path, duration, offset, silent)
+
+
+    def load_flac_array(self, filepath, duration, offset, silent):
+        """Load FLAC directly into a NumPy array (no temp WAV, no pyFLAC)."""
+
+        info = sf.info(filepath)
+        sr = info.samplerate
+
+        start = int(offset * sr) if offset else 0
+        frames = int(duration * sr) if duration else -1
+
+        audio, sr = sf.read(
+            filepath,
+            dtype="float32",
+            start=start,
+            frames=frames
+        )
+
+        # Ensure mono (if single channel expected)
+        if audio.ndim > 1:
+            audio = np.mean(audio, axis=1)
+
+        return audio, sr

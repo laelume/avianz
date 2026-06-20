@@ -36,6 +36,11 @@ class ControllableAudio(QAudioSink):
     # If called by main interface, starts a timer for the moving bar
 
     def __init__(self, sp=None, loop=False, audioFormat=None,useBar=False):
+        
+        # audioBuffer is assigned in loadArray() on first playback — initialize to None to prevent
+        # AttributeError in pressedStop() if stop is called before any audio has played
+        self.audioBuffer = None
+
         # Note the order here is audioFormat passed, otherwise sp.audioFormat
         #print(self.audioFormat.sample_format, self.audioFormat.sample_rate, self.audioFormat.bytesPerSample(), self.audioFormat.channels)
 
@@ -92,7 +97,8 @@ class ControllableAudio(QAudioSink):
         super(ControllableAudio, self).__init__(audioDevice, format=qtAudioFormat)
         self.bytesPerSecond = int(self.sampwidth * self.audioFormat.sample_rate * self.audioFormat.channels)
         # TODO: or the size of the data if < 4 secs
-        self.setBufferSize(int(self.bytesPerSecond/0.25)) # 4 s buffer
+        # self.setBufferSize(int(self.bytesPerSecond/0.25)) # 4 s buffer
+        self.setBufferSize(int(self.bytesPerSecond/0.05)) # 50 ms buffer
 
         # This is a timer for the moving bar. 
         # On this notify, move slider (connected where called)
@@ -191,6 +197,7 @@ class ControllableAudio(QAudioSink):
             self.NotifyTimer.stop()
 
     @pyqtSlot()
+    # Original from branch
     def pressedStop(self):
         # stop and reset to window/segment start
 
@@ -211,6 +218,43 @@ class ControllableAudio(QAudioSink):
 
         if self.useBar:
             self.NotifyTimer.stop()
+
+    # def pressedStop(self):
+
+    #     # # guard against being called when not playing or paused — no-op in that case
+    #     # if not self.isPlayingorPaused():
+    #     #     return
+
+    #     # print(f"pressedStop: called, state={self.state()}, audioThreadLoading={self.audioThreadLoading}")
+    #     # self.audioThreadPaused = True  # block fillBuffer from writing more real data
+    #     # if self.audioBuffer is not None:
+    #     #     silence = b'\x00' * self.bytesFree()
+    #     #     print(f"pressedStop: writing {len(silence)} silence bytes to active buffer")
+    #     #     self.audioBuffer.write(silence)
+    #     # self.audioThreadLoading = False
+    #     # self.stop()
+    #     # print(f"pressedStop: stop() called, state={self.state()}")
+    #     # if self.audioThread is not None:
+    #     #     print(f"pressedStop: joining audioThread")
+    #     #     self.audioThread.join()
+    #     #     print(f"pressedStop: audioThread joined")
+    #     # self.audioThreadPaused = False
+    #     # self.reset()
+    #     # print(f"pressedStop: reset() called, state={self.state()}")
+    #     # if self.useBar:
+    #     #     self.NotifyTimer.stop()
+    #     #     print(f"pressedStop: NotifyTimer stopped")
+
+    #     self.audioThreadPaused = True
+    #     self.audioThreadLoading = False
+    #     self.reset()
+    #     self.stop()
+    #     if self.audioThread is not None:
+    #         self.audioThread.join()
+    #     self.audioThreadPaused = False
+    #     if self.useBar:
+    #         self.NotifyTimer.stop()        
+
 
     @pyqtSlot()
     def playSeg(self, start, stop, speed=1.0, audiodata=None, low=None, high=None):
@@ -325,13 +369,19 @@ class ControllableAudio(QAudioSink):
             self.NotifyTimer.start(30)
 
     def fillBuffer(self):
+        
         print(f"fillBuffer: starting, bytesAvailable={self.InBuffer.bytesAvailable()}, audioThreadLoading={self.audioThreadLoading}")
+
         while self.InBuffer.bytesAvailable() > 0 and self.audioThreadLoading:
+            state = self.state()
+            if state == QAudio.State.SuspendedState or state == QAudio.State.StoppedState:
+                break
             if self.bytesFree() > 0 and not self.audioThreadPaused:
                 data = self.InBuffer.read(min(self.bytesFree(), self.InBuffer.bytesAvailable()))
                 self.audioBuffer.write(data)
                 self.bytesWritten += len(data)
             sleep(0.01)
+        
         print(f"fillBuffer: ending, bytesWritten={self.bytesWritten}, state={self.state()}")
 
     @pyqtSlot()

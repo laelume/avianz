@@ -137,7 +137,8 @@ class ManualInterface(QMainWindow):
     """Main class for the user interface.
     Contains most of the user interface and plotting code"""
 
-    def __init__(self,root=None,configdir=None,CLI=False,cheatsheet=False,zooniverse=False,firstFile='', imageFile='', command=''):
+    def __init__(self, root=None, configdir=None, CLI=False, cheatsheet=False, zooniverse=False, firstFile='', imageFile='', command='', on_ready=None):
+    # def __init__(self,root=None,configdir=None,CLI=False,cheatsheet=False,zooniverse=False,firstFile='', imageFile='', command=''):
         """Initialisation of the class. Load main config and bird lists from configdir.
         Also initialises the data structures and loads an initial file (specified explicitly)
         and sets up the window.
@@ -360,8 +361,15 @@ class ManualInterface(QMainWindow):
 
             self.listLoadFile(os.path.basename(firstFile))
 
+        # skip operator/reviewer dialog if both fields are already populated from a previous session
         if self.DOC and not cheatsheet and not zooniverse:
-            self.setOperatorReviewerDialog()
+            if not self.operator or not self.reviewer: # if either field is empty 
+                self.setOperatorReviewerDialog()
+
+        # call preset from the on_ready callback if provided — used by the launcher to persist session state
+        if callable(on_ready):
+            on_ready(self)
+
 
     def createMenu(self):
         # In Qt6 the order of addAction changes
@@ -5846,6 +5854,9 @@ class ManualInterface(QMainWindow):
         name1, name2 = self.operatorReviewerDialog.getValues()
         self.operator = str(name1)
         self.reviewer = str(name2)
+        # sync config dict with operator/reviewer so closeFile() writes correct values to AviaNZconfig.txt
+        self.config['operator'] = self.operator
+        self.config['reviewer'] = self.reviewer
         self.statusRight.setText("Operator: " + self.operator + ", Reviewer: "+self.reviewer)
         self.operatorReviewerDialog.close()
         self.segmentsToSave = True
