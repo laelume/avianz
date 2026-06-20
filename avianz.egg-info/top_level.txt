@@ -1,5 +1,0 @@
-Config
-Filters
-Sound Files
-ext
-hooks
