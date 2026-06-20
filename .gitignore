@@ -53,3 +53,5 @@ Docs/FilterTraining.soc
 
 archive/
 environ-10.yml
+
+*.egg
