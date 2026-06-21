@@ -21,9 +21,9 @@
 
 import numpy as np
 
-from src.core import spectrogram
-from src.core import audio_data
-from src.core import signal_proc
+from avianz.src.core import spectrogram
+from avianz.src.core import audio_data
+from avianz.src.core import signal_proc
 
 
 def add_noise(image, noise_image, noise_range=(0.2, 0.8)):

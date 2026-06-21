@@ -26,10 +26,10 @@ import numpy as np
 import math
 import soundfile as sf
 
-from src.core import annotation
-from src.core import wavelet_segment
-from src.core import segmentation
-from src.core import spectrogram
+from avianz.src.core import annotation
+from avianz.src.core import wavelet_segment
+from avianz.src.core import segmentation
+from avianz.src.core import spectrogram
 
 
 class TrainingDataGenerator:

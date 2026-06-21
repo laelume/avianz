@@ -31,7 +31,7 @@ from PyQt6.QtCore import Qt
 import pyqtgraph as pg
 
 from src.ui.components.popups import MessagePopup
-from src.core import config_loader
+from avianz.src.core import config_loader
 import json
 
 pg.setConfigOption('background','w')

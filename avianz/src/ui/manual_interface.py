@@ -80,12 +80,12 @@ import pyqtgraph.functions as fn
 import pyqtgraph.exporters as pge
 from pyqtgraph.parametertree import Parameter, ParameterTree
 
-from src.core import clustering, config_loader, excel_export, signal_proc, wavelet_functions, features
-from src.core import annotation
-from src.core import wavelet_segment
-from src.core import spectrogram
-from src.core import segmentation
-from src.core import audio_data
+from avianz.src.core import clustering, config_loader, excel_export, signal_proc, wavelet_functions, features
+from avianz.src.core import annotation
+from avianz.src.core import wavelet_segment
+from avianz.src.core import spectrogram
+from avianz.src.core import segmentation
+from avianz.src.core import audio_data
 from src.ui.components.audio_player import ControllableAudio
 from src.ui.components.axis_widgets import TimeAxisHour, TimeAxisMin
 from src.ui.components.buttons_and_controls import BrightContrVol, CustomSlider
@@ -4778,7 +4778,7 @@ class ManualInterface(QMainWindow):
                         print("Can't read %s.p or missing data" %tagFileMinusExtension)
                         # Otherwise, load the wav file
                         # TODO: Test
-                        from src.core import spectrogram 
+                        from avianz.src.core import spectrogram 
                         sp = spectrogram.Spectrogram(512,256, 0, 0)
                         sp.readSoundFile(tagFileMinusExtension + '.wav', 0, 0)
                         duration = sp.fileLength  # fileLength is now in seconds
@@ -4894,7 +4894,7 @@ class ManualInterface(QMainWindow):
                     except:
                         print("Can't read %s.p or missing data" %tagFileMinusExtension)
                         # Otherwise, load the wav file
-                        from src.core import spectrogram 
+                        from avianz.src.core import spectrogram 
                         sp = spectrogram.Spectrogram(512,256, 0, 0)
                         sp.readSoundFile(tagFileMinusExtension + '.wav', 0, 0)
                         duration = sp.fileLength  # fileLength is now in seconds

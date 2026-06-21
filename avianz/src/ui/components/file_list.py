@@ -27,7 +27,7 @@ import soundfile as sf
 from PyQt6.QtWidgets import QListWidget, QListWidgetItem
 from PyQt6.QtCore import Qt, QDir
 from PyQt6.QtGui import QPixmap, QPainter, QIcon, QColor
-from src.core import annotation
+from avianz.src.core import annotation
 
 
 class LightedFileList(QListWidget):

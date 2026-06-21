@@ -22,9 +22,9 @@
 
 import numpy as np
 import librosa
-from src.core import spectrogram
-from src.core import wavelet_segment
-from src.core import audio_data
+from avianz.src.core import spectrogram
+from avianz.src.core import wavelet_segment
+from avianz.src.core import audio_data
 
 
 class Features:

@@ -33,15 +33,15 @@ import matplotlib.pyplot as plt
 from time import strftime, gmtime
 import math
 
-from src.core import annotation
-from src.core import config_loader
+from avianz.src.core import annotation
+from avianz.src.core import config_loader
 from src.models import model_trainer
 from src.models import augmentation
 from src.models import data_generator
 from src.models import model_loader
 from src.models import inference
-from src.core import wavelet_segment
-from src.core.batch_processor import BatchProcessor, BatchProcessorCallbacks
+from avianz.src.core import wavelet_segment
+from avianz.src.core.batch_processor import BatchProcessor, BatchProcessorCallbacks
 
 import soundfile as sf
 

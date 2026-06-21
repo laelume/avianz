@@ -25,7 +25,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import json, os
 
-from src.core import config_loader
+from avianz.src.core import config_loader
 from src.models import architectures
 
 

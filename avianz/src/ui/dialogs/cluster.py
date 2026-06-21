@@ -29,7 +29,7 @@ import pyqtgraph as pg
 import numpy as np
 from src.ui.colourMaps import colourMaps
 from src.ui.components.buttons_and_controls import BrightContrVol, PicButton
-from src.core import spectrogram
+from avianz.src.core import spectrogram
 
 pg.setConfigOption('background','w')
 pg.setConfigOption('foreground','k')

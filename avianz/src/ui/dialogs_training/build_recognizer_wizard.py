@@ -40,12 +40,12 @@ from src.ui.components.popups import MessagePopup
 from src.ui.components.file_list import LightedFileList
 from src.ui.components.layout_widgets import Layout
 from src.ui.dialogs_training.roc_canvas import ROCCanvas
-from src.core import spectrogram
-from src.core import wavelet_segment
-from src.core import wavelet_functions
-from src.core import annotation
-from src.core import clustering
-from src.core import audio_data
+from avianz.src.core import spectrogram
+from avianz.src.core import wavelet_segment
+from avianz.src.core import wavelet_functions
+from avianz.src.core import annotation
+from avianz.src.core import clustering
+from avianz.src.core import audio_data
 
 import math
 

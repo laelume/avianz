@@ -31,11 +31,11 @@ import traceback
 from pyqtgraph.dockarea import Dock, DockArea
 import pyqtgraph as pg
 
-from src.core import config_loader, signal_proc
+from avianz.src.core import config_loader, signal_proc
 from src.utils.exceptions import GentleExitException
-from src.core import spectrogram
-from src.core import annotation
-from src.core import excel_export
+from avianz.src.core import spectrogram
+from avianz.src.core import annotation
+from avianz.src.core import excel_export
 from src.ui.components.buttons_and_controls import MainPushButton
 from src.ui.components.popups import MessagePopup
 from src.ui.components.file_list import LightedFileList

@@ -260,7 +260,7 @@ class Segmenter:
             return []
         
         # Handle Segment objects from annotation.SegmentList by extracting time bounds
-        from src.core import annotation
+        from avianz.src.core import annotation
         if len(segments) > 0 and isinstance(segments[0], annotation.Segment):
             segments = [[seg.start_time, seg.end_time] for seg in segments]
         

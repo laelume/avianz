@@ -26,7 +26,7 @@ import datetime as dt
 
 # sys.path.append('..')
 from ext import SplitLauncher
-from src.core import annotation
+from avianz.src.core import annotation
 from src.ui.components.popups import MessagePopup
 
 

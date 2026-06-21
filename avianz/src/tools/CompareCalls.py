@@ -13,8 +13,8 @@ import pyqtgraph as pg
 
 from src.ui.components.popups import MessagePopup
 from src.ui.components.buttons_and_controls import BrightContrVol
-from src.core import annotation
-from src.core import spectrogram
+from avianz.src.core import annotation
+from avianz.src.core import spectrogram
 from src.ui.colourMaps import colourMaps
 
 

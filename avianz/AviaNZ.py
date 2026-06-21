@@ -82,7 +82,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
     try:
         import platform, json, shutil
         from jsonschema import validate
-        from src.core import config_loader
+        from avianz.src.core import config_loader
     except Exception as e:
         print("ERROR: could not import packages")
         raise
@@ -195,7 +195,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 print("ERROR: valid input dir (-d) and recogniser name (-r) are essential for batch processing")
                 raise
         elif training:
-            from src.core import training
+            from avianz.src.core import training
             if os.path.isdir(sdir1) and os.path.isdir(sdir2) and recogniser in confloader.filters(filterdir).keys() and width>0:
                 training = training.NNTrain(configdir,filterdir,sdir1,sdir2,recogniser,width,CLI=True)
                 training.cliTrain()
@@ -204,7 +204,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 print("ERROR: valid input dirs (-d and -e) and recogniser name (-r) are essential for training")
                 raise
         elif testing:
-            from src.core import training
+            from avianz.src.core import training
             filts = confloader.filters(filterdir)
             if os.path.isdir(sdir1) and recogniser in filts:
                 testing = training.NNTest(sdir1, filts[recogniser], recogniser, configdir,filterdir,CLI=True)
@@ -232,7 +232,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
         
         # Register the UI MessagePopup implementation for core modules to use
         from src.ui.components.popups import MessagePopup as UIMessagePopup
-        from src.core import message_popup
+        from avianz.src.core import message_popup
         message_popup.set_message_popup_class(UIMessagePopup)
         
         #QApplication.setAttribute(QtCore.Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

@@ -27,7 +27,7 @@ from time import sleep
 from PyQt6.QtCore import QTimer, QIODevice, QBuffer, QByteArray, pyqtSlot
 from PyQt6.QtMultimedia import QAudio, QAudioSink, QAudioFormat, QMediaDevices
 
-from src.core import signal_proc
+from avianz.src.core import signal_proc
 
 
 class ControllableAudio(QAudioSink):

@@ -26,8 +26,8 @@ import os, webbrowser, re
 import pyqtgraph as pg
 from pyqtgraph.dockarea import Dock, DockArea
 
-from src.core import config_loader
-from src.core.batch_processor import BatchProcessor, BatchProcessorCallbacks
+from avianz.src.core import config_loader
+from avianz.src.core.batch_processor import BatchProcessor, BatchProcessorCallbacks
 from src.utils.exceptions import GentleExitException
 from src.ui.components.popups import MessagePopup
 from src.ui.components.file_list import LightedFileList

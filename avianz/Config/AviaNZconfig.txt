@@ -15,7 +15,7 @@
     "sgEqualLoudness": false,
     "sgType": "Standard",
     "sgNormMode": "Log",
-    "sgScale": "Linear",
+    "sgScale": "Mel Frequency",
 
     "minFreq": 0,
     "maxFreq": 24000,
@@ -50,7 +50,7 @@
 
     "brightness": 50,
     "contrast": 50,
-    "cmap": "Grey",
+    "cmap": "Plasma",
     "ColourList": ["Grey", "Viridis", "Inferno", "Plasma", "Autumn", "Cool", "Bone",
                    "Copper", "Hot", "Jet", "Thermal", "Flame", "Yellowy", "Bipolar", "Spectrum"],
     "ColourSelected": [0, 0, 255, 100],
@@ -59,7 +59,7 @@
     "ColourPossible": [255, 255, 0, 100],
 
     "SoundFileDir": "./Sound Files",
-    "FiltersDir": "../Filters",
+    "FiltersDir": "Filters",
     "BirdListShort": "ListCommonBirds.txt",
     "BirdListLong": "ListDOCBirds.txt",
     "KnownCallsList": "ListKnownCalls.txt",

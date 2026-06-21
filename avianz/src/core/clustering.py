@@ -24,13 +24,13 @@ import numpy as np
 import os
 import librosa
 
-from src.core import wavelet_segment
-from src.core import wavelet_functions
-from src.core import spectrogram
-from src.core import annotation
-from src.core import segmentation
-from src.core import signal_proc
-from src.core import audio_data
+from avianz.src.core import wavelet_segment
+from avianz.src.core import wavelet_functions
+from avianz.src.core import spectrogram
+from avianz.src.core import annotation
+from avianz.src.core import segmentation
+from avianz.src.core import signal_proc
+from avianz.src.core import audio_data
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import scale

@@ -34,10 +34,10 @@ from src.ui.colourMaps import colourMaps
 from src.ui.components.buttons_and_controls import CustomSlider, PicButton
 from src.ui.components.file_list import LightedFileList
 from src.ui.dialogs_training.roc_canvas import ROCCanvas
-from src.core import config_loader
-from src.core import spectrogram
-from src.core import annotation
-from src.core import training
+from avianz.src.core import config_loader
+from avianz.src.core import spectrogram
+from avianz.src.core import annotation
+from avianz.src.core import training
 
 
 

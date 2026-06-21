@@ -218,7 +218,7 @@ def bandpass_filter(data,sampleRate,start=0,end=-1):
 
 # The next functions perform spectrogram inversion
 def invert_spectrogram(sg, incr=32, nits=10, window='Hamming', bmp=True, sampleRate=16000):
-    from src.core import spectrogram
+    from avianz.src.core import spectrogram
     sp = spectrogram.Spectrogram()
     
     # Determine if this is a one-sided or two-sided spectrogram

@@ -1,29 +1,38 @@
-# **AVIANZ** : an open-source biacoustics analysis software
+Welcome to AviaNZ, an open-source project for manual and automatic analysis of bio-acoustic recordings.
 
-0>0
+This software enables you to: 
+* review and listen to wav files from acoustic field recorders, 
+* segment and annotate the recordings, 
+* train filters to recognise calls from particular species, 
+* use filters that others have provided to batch process many files
+* review annotations
+* produce output in spreadsheet form, or as files ready for further statistical analyses
 
-## Welcome to the Pythonically packaged version of Avianz!  
-This fork lets you interact directly with Avianz via API-like calls to make your life easier, or maybe harder. 
+For more information about the project, see http://www.avianz.net
 
+# Citation
 
-Features: 
-* review and listen to wav files, 
-* segment and annotate recordings, 
-* train wavelet filters to recognise species, 
-* import custom filters and batch process files,
-* review annotations and export as csv or JSON, 
-
-For more information, see http://www.avianz.net
-
-# Environment
-
-Supports Python <= 3.10
+If you use this software, please credit us in any papers that you write. An appropriate reference is:
 
 ```
-conda env create -n avianz -f environ-10.yml -y python==3.10
+@article{Marsland19,
+  title = "AviaNZ: A future-proofed program for annotation and recognition of animal sounds in long-time field recordings",
+  author = "{Marsland}, Stephen and {Priyadarshani}, Nirosha and {Juodakis}, Julius and {Castro}, Isabel",
+  journal = "Methods in Ecology and Evolution",
+  volume = 10,
+  number = 8,
+  pages = "1189--1195",
+  year = 2019
+}
 ```
 
 # Installation
+
+## Supports up to Python 3.10
+
+<!-- '''
+conda env create -f environment-12.yml -y
+''' -->
 
 ## Windows
 Windows binaries are available at http://www.avianz.net.
@@ -36,6 +45,7 @@ winget install Microsoft.VisualStudio.2022.BuildTools
 <!-- OR POSSIBLY (PS): winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools" -->
 '''
 (then restart PC)
+
 
 ## macOS
 An installer script is available at http://www.avianz.net.
@@ -55,30 +65,8 @@ sudo apt-get install git
 5. Build the Cython extensions by running `cd ext; python3 setup.py build_ext -i; cd..`  
 6. Done! Launch the software with `python3 AviaNZ.py`  
 
-
 # Acknowledgements
-This fork is maintained by Ashlae Blum'e. 
-
-Original software was developed by Stephen Marsland et alia (see below).  
 
 AviaNZ is based on PyQtGraph and PyQt, and uses Librosa and Scikit-learn amongst others.
 
 Development of this software was supported by the RSNZ Marsden Fund, and the NZ Department of Conservation.
-
-# Citation
-
-If you use this software, please credit us in any papers that you write. An appropriate reference is:
-
-```
-@article{Marsland19,
-  title = "AviaNZ: A future-proofed program for annotation and recognition of animal sounds in long-time field recordings",
-  author = "{Marsland}, Stephen and {Priyadarshani}, Nirosha and {Juodakis}, Julius and {Castro}, Isabel",
-  journal = "Methods in Ecology and Evolution",
-  volume = 10,
-  number = 8,
-  pages = "1189--1195",
-  year = 2019, 
-  url = "http://www.avianz.net"
-  doi = "10.5061/dryad.m70p89d"
-}
-```

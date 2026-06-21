@@ -24,8 +24,8 @@ import os
 import fnmatch
 import numpy as np
 
-from src.core import annotation
-from src.core import spectrogram
+from avianz.src.core import annotation
+from avianz.src.core import spectrogram
 
 class BatExporter:
     """Handles export of bat detection results to various formats"""

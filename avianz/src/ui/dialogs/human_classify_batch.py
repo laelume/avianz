@@ -212,8 +212,8 @@ class HumanClassify2(QDialog):
         if pageNum in self.loadedPages:
             return
             
-        from src.core import spectrogram
-        from src.core import signal_proc
+        from avianz.src.core import spectrogram
+        from avianz.src.core import signal_proc
         
         buttonsPerPage = self.maxRows * self.maxCols
         startIdx = pageNum * buttonsPerPage
