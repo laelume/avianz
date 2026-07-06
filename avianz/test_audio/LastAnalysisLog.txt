@@ -1,4 +1,4 @@
-#Analysis started on 2026 07 06, 20:36:43:
+#Analysis started on 2026 07 06, 21:33:28:
 Kiwi (Nth Is Brown) & Kiwi (Nth Is Brown)_chp
 protocolSize=15, protocolInterval=300, maxgap=1, minlen=0.2, maxlen=10
 ..\test_audio\andre_ams3_20230808_000500_0_trimmed.wav
