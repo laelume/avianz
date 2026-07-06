@@ -56,5 +56,5 @@ environ-10.yml
 
 *.egg
 *.egg-info
-
+dist/
 trimmed_audio/

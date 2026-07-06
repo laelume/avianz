@@ -29,7 +29,6 @@ from avianz.src.models import inference
 import numpy as np
 import scipy.ndimage as spi
 from scipy import signal
-import librosa
 import os
 import copy
 from scipy.interpolate import interp1d

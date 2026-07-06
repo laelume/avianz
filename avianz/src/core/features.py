@@ -21,7 +21,6 @@
 # Code to extract various features from sound data
 
 import numpy as np
-import librosa
 from avianz.src.core import spectrogram
 from avianz.src.core import wavelet_segment
 from avianz.src.core import audio_data
