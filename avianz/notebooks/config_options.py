@@ -1,3 +1,15 @@
+# config_options.py
+## Some options for config file, saved here to implement in the future or build a companion config
+
+
+# Possible signal types: 
+"sgType": "Standard", # 'Standard', 'Multi-tapered', 'Reassigned'
+
+# Possible signal scaling: 
+"sgScale": "Linear", # 'Linear', 'Mel Frequency', 'Bark Frequency'
+
+# Other options
+
 {
     "previousMode": 1,
     "previousFile": "Sound Files/NIBrownKiwi_Kaka_5min.wav",
@@ -59,7 +71,7 @@
     "ColourPossible": [255, 255, 0, 100],
 
     "SoundFileDir": "./Sound Files",
-    "FiltersDir": "./Filters",
+    "FiltersDir": "../Filters",
     "BirdListShort": "ListCommonBirds.txt",
     "BirdListLong": "ListDOCBirds.txt",
     "KnownCallsList": "ListKnownCalls.txt",
