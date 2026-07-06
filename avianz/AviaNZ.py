@@ -146,27 +146,44 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 raise
 
     # copy over filters to ~/.avianz/Filters/:
-    # consider future support for subdirectories
+
+    # Walk the recogniser tree.
     filterdir = os.path.join(configdir, "Filters/")
     if not os.path.isdir(filterdir):
         print("Creating filter dir %s" % filterdir)
         os.makedirs(filterdir)
-    for f in os.listdir("Filters"):
-        ff = os.path.join("Filters", f) # Kiwi.txt
-        if not os.path.isfile(os.path.join(filterdir, f)): # ~/.avianz/Filters/Kiwi.txt
-            print("Recogniser %s not found, providing default" % f)
-            try:
-                shutil.copy2(ff, filterdir) # cp Filters/Kiwi.txt ~/.avianz/Filters/
-            except Exception as e:
-                print("Warning: failed to copy recogniser %s to %s" % (ff, filterdir))
-                print(e)
+
+    for root, dirs, files in os.walk("Filters"):
+
+        # Ignore Python bytecode cache directories.
+        if "__pycache__" in dirs:
+            print("Ignoring __pycache__ directory.")
+            dirs.remove("__pycache__")
+
+        for f in files:
+            ff = os.path.join(root, f) # Kiwi.txt
+
+            # Preserve the relative directory structure under Filters/
+            rel = os.path.relpath(ff, "Filters")
+            dest = os.path.join(filterdir, rel) # ~/.avianz/Filters/Kiwi.txt
+
+            # Create destination subdirectories if needed.
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+
+            if not os.path.isfile(dest): # ~/.avianz/Filters/Kiwi.txt
+                print("Recogniser %s not found, providing default" % rel)
+                try:
+                    shutil.copy2(ff, dest) # cp Filters/Kiwi.txt ~/.avianz/Filters/
+                except Exception as e:
+                    print("Warning: failed to copy recogniser %s to %s" % (ff, dest))
+                    print(e)
 
 
     # run splash screen:
     if cli:
         print("Starting AviaNZ in CLI mode")
         if batchmode:
-            from cli.batch_cli import run_cli_batch
+            from src.cli.batch_cli import run_cli_batch
             if os.path.isdir(sdir1) and recogniser in confloader.filters(filterdir).keys():
                 wind_str = "OLS wind filter (recommended)" if wind else "None"
                 result = run_cli_batch(

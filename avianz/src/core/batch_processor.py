@@ -88,6 +88,7 @@ class BatchProcessor:
         
         # Parameters
         self.dirName = directory
+
         # Backward compatibility: if overwrite is specified, use it for overwriteSpecies
         if overwrite is not None:
             self.overwriteSpecies = overwrite
@@ -95,6 +96,7 @@ class BatchProcessor:
         else:
             self.overwriteSpecies = overwriteSpecies
             self.overwriteAll = overwriteAll
+        
         self.callbacks = callbacks
         self.testmode = testmode
         
@@ -128,6 +130,37 @@ class BatchProcessor:
         self.bird_detector = bird_detector.BirdDetector(self.config, self.configdir)
         self.bat_detector = bat_detector.BatDetector()
 
+
+    def has_annotations(self, filepath):
+        """Check if annotations likely exist for this file."""
+        base, _ = os.path.splitext(filepath)
+
+        possible = [
+            base + ".data",
+            base + ".txt",
+            base + ".csv",
+            base + ".json",
+            base + ".xml",
+            base + ".annotations"
+        ]
+
+        return any(os.path.exists(p) for p in possible)
+
+
+    def define_annotation_save_location(self, filepath):
+        base = os.path.splitext(os.path.basename(filepath))[0]
+
+        # Default behaviour: same folder as audio batch
+        if not self.annotationDir:
+            return os.path.join(self.dirName, base + ".json")
+
+        # Only create folder if user explicitly requested it
+        if not os.path.isdir(self.annotationDir):
+            os.makedirs(self.annotationDir, exist_ok=True)
+
+        return os.path.join(self.annotationDir, base + ".json")
+
+        
     def process_files(self):
         """Main processing method. Returns 0 on success, 1 on error."""
         filters = [self.FilterDicts[name] for name in self.species]
@@ -140,9 +173,18 @@ class BatchProcessor:
         speciesStr = " & ".join(self.species)
 
         self.NNDicts = self.ConfigLoader.getNNmodels(self.FilterDicts, self.filtersDir, self.species)
-
+        
+        # Setup custom annotation directory (optional) 
+        self.annotationDir = self.options.get("ann_dir", None) # add to config??
+        
+        
         allsoundfiles = self.get_files_to_process()
         total = len(allsoundfiles)
+
+        # Check to see if there are any existing annotations
+        any_existing_annotations = any(
+            self.has_annotations(f) for f in allsoundfiles
+        )
 
         self.filesDone = []
         self.log = batch_log.Log(os.path.join(self.dirName, 'LastAnalysisLog.txt'), speciesStr, self.options)
@@ -171,14 +213,29 @@ class BatchProcessor:
         
         message = f"Species: {speciesStr}, options: {opts}.\nNumber of files to analyse: {total}, {cnt} done so far.\n"
         message += f"Log file stored in {self.dirName}/LastAnalysisLog.txt.\n"
-        
+
+
+
+        # Provides updates about whether there are existing annotations
         if self.overwriteAll:
-            message += "\nWarning: ALL previous annotations in these files will be deleted!\n"
+            if any_existing_annotations:
+                message += "\nWarning: ALL previous annotations in these files will be deleted!\n"
+            else:
+                message += "\nNo existing annotations found (nothing will be overwritten).\n"
+
         elif self.overwriteSpecies:
-            message += "\nWarning: any previous annotations for the selected species in these files will be deleted!\n"
-            
+            if any_existing_annotations:
+                message += "\nWarning: any previous annotations for the selected species in these files will be deleted!\n"
+            else:
+                message += "\nNo existing annotations for selected species found.\n"
+
+        if any_existing_annotations and not (self.overwriteAll or self.overwriteSpecies):
+            message += "\nExisting annotations detected. Run with overwrite enabled to replace them.\n"
+
         message = "Analysis will be launched with these options:\n" + message + "\nConfirm?"
-        
+
+
+
         if not self.callbacks.confirm_analysis_launch(message):
             print("Analysis cancelled")
             return 1
