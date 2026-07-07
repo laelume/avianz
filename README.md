@@ -19,22 +19,38 @@ For more information, see http://www.avianz.net
 
 Supports Python <= 3.10
 
+## Using conda
 ```
-conda env create -n avianz -f environ-10.yml -y python==3.10
+conda env create -n avianz -f environment.yml -y python==3.10
 ```
 
-# Installation
+## Editable python package
+```
+git clone https://github.com/laelume/avianz.git && cd avianz && pip install -e .
+```
+
+# CLI Command Line Interface
+```
+cd avianz && 
+python AviaNZ.py -c -b -d "Z:\some_top_level\collection\of\audio_files\YYYYMMDD" -r "Kiwi (Nth Is Brown)" -w
+```
+# GUI Installation
 
 ## Windows
 Windows binaries are available at http://www.avianz.net.
 To install from source, follow the Linux instructions.
 
 - Remember to include a C compiler such as VS Build Tools, and make sure to check "Desktop development with C++"
-'''
+
 (PS)
+```
 winget install Microsoft.VisualStudio.2022.BuildTools
-<!-- OR POSSIBLY (PS): winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools" -->
-'''
+``
+
+OR POSSIBLY:
+```winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools"
+```
+
 (then restart PC)
 
 ## macOS
