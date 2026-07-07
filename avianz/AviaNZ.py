@@ -65,7 +65,7 @@ import click
 @click.option('--gpu/--no-gpu', default=True, help='Allow GPU usage for NN inference if available; prompts for CPU fallback confirmation if not')
 @click.argument('command', nargs=-1)
 
-def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, training, testing, sdir1, sdir2, recogniser, wind, width, time_start, time_end, protocol_size, protocol_interval, maxgap, minlen, maxlen, subset, intermittent, merge_syllables, command):
+def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, training, testing, sdir1, sdir2, recogniser, wind, width, time_start, time_end, protocol_size, protocol_interval, maxgap, minlen, maxlen, subset, intermittent, merge_syllables, annotation_save_dir, gpu, command):
     # Suppress TensorFlow messages (if it gets imported somehow)
     import os
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -190,6 +190,16 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
             from src.cli.batch_cli import run_cli_batch
             if os.path.isdir(sdir1) and recogniser in confloader.filters(filterdir).keys():
                 wind_str = "OLS wind filter (recommended)" if wind else "None"
+
+                # Confirms user-defined custom annotation direrctory
+                if annotation_save_dir:
+                    print(f"Annotations will be saved to custom directory: {annotation_save_dir}")
+                else:
+                    print("Annotations will be saved alongside source audio files (default)")
+
+                # Confirms user-selected GPU setting
+                print(f"GPU usage: {'enabled (falls back to CPU prompt if unavailable)' if gpu else 'disabled, forcing CPU'}")
+
                 result = run_cli_batch(
                     configdir=configdir, 
                     directory=sdir1, 
@@ -205,7 +215,9 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                     protocolInterval=protocol_interval, 
                     maxgap=maxgap, 
                     minlen=minlen, 
-                    maxlen=maxlen
+                    maxlen=maxlen,
+                    annotationSaveDir=annotation_save_dir,
+                    useGpu=gpu                    
                 )
                 if result == 0:
                     print("Analysis complete, closing AviaNZ")

@@ -41,7 +41,7 @@ class BirdDetector:
         self.configdir = configdir
     
     def detectBirdsInFile(self, sp, segments, species, filters, NNDicts, options, anySound=False, 
-                         testmode=False, segments_nonn=None, check_cancelled=None):
+                         testmode=False, segments_nonn=None, check_cancelled=None, useGpu=True):
         """Detect birds in audio file using wavelet segmentation and optional NN classification."""
         # Calculate page size based on audio sample rate
         samplesInPage = self.calculatePageSize(sp, species, filters)
@@ -64,7 +64,7 @@ class BirdDetector:
             
             # Process bird-specific filters
             self.processBirdFilters(sp, segments, species, filters, NNDicts, start, end, 
-                                   options, testmode, segments_nonn, check_cancelled)
+                                   options, testmode, segments_nonn, check_cancelled, useGpu)
     
     def calculatePageSize(self, sp, species, filters):
         """Calculate appropriate page size based on audio characteristics and filters."""
@@ -125,7 +125,7 @@ class BirdDetector:
             raise GentleExitException
     
     def processBirdFilters(self, sp, segments, species, filters, NNDicts, start, end, 
-                          options, testmode, segments_nonn, check_cancelled):
+                          options, testmode, segments_nonn, check_cancelled, useGpu=True):
         """Process bird-specific filters using wavelet segmentation."""
         # Group filters by required sample rate
         uniqueSampleRates = set([filt["SampleRate"] for filt in filters])
@@ -178,7 +178,7 @@ class BirdDetector:
                     if not testmode:
                         # Normal processing
                         postsegs = self.postProcFull(thisPageSegs, spInfo, filtix, start, end, 
-                                                   NNmodel, sp)
+                                                   NNmodel, sp, useGpu)
                         self.makeBirdSegments(segments, postsegs, speciesAtSampleRate[speciesix], 
                                              spInfo["species"], spInfo['Filters'][filtix], 
                                              sp.audio_data.sample_rate)
@@ -190,19 +190,19 @@ class BirdDetector:
                         # Test mode: process both with and without NN
                         if segments_nonn is not None:
                             postsegs_nonn = self.postProcFull(copy.deepcopy(thisPageSegs), spInfo, 
-                                                            filtix, start, end, None, sp)
+                                                            filtix, start, end, None, sp, useGpu)
                             self.makeBirdSegments(segments_nonn, postsegs_nonn, 
                                                  speciesAtSampleRate[speciesix], 
                                                  spInfo["species"], spInfo['Filters'][filtix],
                                                  sp.audio_data.sample_rate)
                         
                         postsegs = self.postProcFull(copy.deepcopy(thisPageSegs), spInfo, filtix, 
-                                                   start, end, NNmodel, sp)
+                                                   start, end, NNmodel, sp, useGpu)
                         self.makeBirdSegments(segments, postsegs, speciesAtSampleRate[speciesix], 
                                              spInfo["species"], spInfo['Filters'][filtix],
                                              sp.audio_data.sample_rate)
     
-    def postProcFull(self, segments, spInfo, filtix, start, end, NNmodel, sp):
+    def postProcFull(self, segments, spInfo, filtix, start, end, NNmodel, sp, useGpu):
         """Apply full post-processing: NN classification, gap joining, fundamental frequency detection."""
         subfilter = spInfo["Filters"][filtix]
         
@@ -212,7 +212,7 @@ class BirdDetector:
                                  sampleRate=sp.audio_data.sample_rate, 
                                  tgtsampleRate=spInfo["SampleRate"],
                                  segments=segments[filtix], subfilter=subfilter,
-                                 NNmodel=NNmodel, cert=50)
+                                 NNmodel=NNmodel, cert=50, useGpu=useGpu)
         print("Segments detected after WF: ", len(segments[filtix]))
 
         if NNmodel:

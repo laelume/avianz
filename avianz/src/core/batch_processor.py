@@ -24,13 +24,7 @@ import os, re
 import time
 import soundfile as sf
 
-# from src.core import spectrogram
-# from src.core import annotation
-# from src.core import config_loader
-# from src.core import batch_log
-# from src.core import bird_detector
-# from src.core import bat_detector
-# from src.core import segmentation
+# replaced 'from src.core import ...'
 
 from . import spectrogram
 from . import annotation
@@ -39,6 +33,18 @@ from . import batch_log
 from . import bird_detector
 from . import bat_detector
 from . import segmentation
+import logging
+
+# Logging
+
+VERBOSE = True    # toggle verbose debug logging on/off for this module
+
+logger = logging.getLogger("batch_processor")
+logger.setLevel(logging.DEBUG if VERBOSE else logging.WARNING)
+if not logger.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    logger.addHandler(_handler)
 
 # Constants
 SAMPLES_PER_PAGE_16KHZ = 900 * 16000
@@ -75,8 +81,21 @@ class BatchProcessor:
                  timeWindow_s=0, timeWindow_e=0,
                  protocolSize=15, protocolInterval=300, 
                  maxgap=1, minlen=0.2, maxlen=10,
+                 annotationSaveDir=None, useGpu=True,
                  testmode=False):
-        
+
+        """Added support for annotaiton directory saving and gpu usage
+
+        annotationSaveDir: optional custom directory to save annotation .data files into,
+                            instead of alongside each source audio file. Passed through to
+                            saveAnnotation at the point where results get written for each
+                            processed file.
+        useGpu:             whether GPU usage is permitted for NN inference, passed through
+                            to configure_gpu_memory when NNmodel is constructed. If False,
+                            forces cpu device without attempting cuda or prompting.
+        """
+
+
         # Configuration
         self.configdir = configdir
         self.configfile = os.path.join(configdir, "AviaNZconfig.txt")
@@ -88,6 +107,8 @@ class BatchProcessor:
         
         # Parameters
         self.dirName = directory
+        self.annotationSaveDir = annotationSaveDir
+        self.useGpu = useGpu
 
         # Backward compatibility: if overwrite is specified, use it for overwriteSpecies
         if overwrite is not None:
@@ -147,19 +168,24 @@ class BatchProcessor:
         return any(os.path.exists(p) for p in possible)
 
 
-    def define_annotation_save_location(self, filepath):
+    def define_annotation_save_location(self, filepath, suffix=".data"):
+        """Resolves output path for saved annotations. Default is next to audio files; uses custom directory if specified.
+
+        filepath: path to the source audio file being annotated
+        suffix:   file suffix to append to the resolved output path (".data" by default,
+                  overridden to ".tmpdata"/".tmp2data" in testmode via saveAnnotation)
+        """
         base = os.path.splitext(os.path.basename(filepath))[0]
 
-        # Default behaviour: same folder as audio batch
+        # FALLBACK: default behaviour, lives alongside audio files
         if not self.annotationDir:
-            return os.path.join(self.dirName, base + ".json")
+            return os.path.join(self.dirName, base + suffix)
 
-        # Only create folder if user explicitly requested it
+        # Create folder if save location is specified
         if not os.path.isdir(self.annotationDir):
             os.makedirs(self.annotationDir, exist_ok=True)
 
-        return os.path.join(self.annotationDir, base + ".json")
-
+        return os.path.join(self.annotationDir, base + suffix)
         
     def process_files(self):
         """Main processing method. Returns 0 on success, 1 on error."""
@@ -175,8 +201,7 @@ class BatchProcessor:
         self.NNDicts = self.ConfigLoader.getNNmodels(self.FilterDicts, self.filtersDir, self.species)
         
         # Setup custom annotation directory (optional) 
-        self.annotationDir = self.options.get("ann_dir", None) # add to config??
-        
+        self.annotationDir = self.annotationSaveDir
         
         allsoundfiles = self.get_files_to_process()
         total = len(allsoundfiles)
@@ -414,7 +439,8 @@ class BatchProcessor:
                 anySound=self.anySound,
                 testmode=self.testmode,
                 segments_nonn=segments_nonn,
-                check_cancelled=self.callbacks.check_cancelled
+                check_cancelled=self.callbacks.check_cancelled, 
+                useGpu=self.useGpu
             )
 
     def loadFile(self, filename, bats=False, anysound=False, impMask=False):
@@ -468,14 +494,23 @@ class BatchProcessor:
             print("%d segments loaded from .data file" % len(self.segments))
 
     def saveAnnotation(self, filename, segmentList, suffix=".data"):
-        """Generates default batch-mode metadata and saves the segmentList to a .data file."""
+        """Generates default batch-mode metadata and saves segmentList to a .data file. Saves to custom location if specified.        
+        
+        Resolves the output path via define_annotation_save_location, which handles the
+        fallback to source-adjacent saving when no custom directory was supplied.
+        """
         segmentList.metadata["Operator"] = "Auto"
         segmentList.metadata["Reviewer"] = ""
         segmentList.metadata["Duration"] = self.sp.get_duration()
         segmentList.metadata["noiseLevel"] = None
         segmentList.metadata["noiseTypes"] = []
         segmentList.saveJSON(str(filename) + suffix)
+        
+        outPath = self.define_annotation_save_location(filename, suffix=suffix)
+        logger.debug("Saving annotation for %s to %s", filename, outPath)
+        segmentList.saveJSON(outPath)
         return 1
+
 
     def addRegularSegments(self, filename, length, interval):
         """Perform the Hartley bodge: add fixed length segments at specified interval."""

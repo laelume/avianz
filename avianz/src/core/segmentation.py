@@ -25,6 +25,8 @@ from avianz.src.core import config_loader
 from avianz.src.core import audio_data
 from avianz.src.utils import shapes
 from avianz.src.models import inference
+from avianz.src.models import gpu_config
+
 
 import numpy as np
 import scipy.ndimage as spi
@@ -630,7 +632,8 @@ class PostProcess:
     cert:       Default certainty to attach to the segments
     """
 
-    def __init__(self, configdir, audioData=None, sampleRate=0, tgtsampleRate=0, segments=[], subfilter={}, NNmodel=None, cert=0):
+    def __init__(self, configdir, audioData=None, sampleRate=0, tgtsampleRate=0, segments=[], subfilter={}, NNmodel=None, cert=0, useGpu=True):
+        
         self.configdir = configdir
         # Store as AudioData object for consistency with Spectrogram API
         if audioData is not None:
@@ -661,7 +664,7 @@ class PostProcess:
 
         if NNmodel:
             # inference.configure_gpu_memory()
-            NNmodel[0], self.device = inference.configure_gpu_memory(NNmodel[0], verbose=VERBOSE)
+            NNmodel[0], self.device = gpu_config.configure_gpu_memory(NNmodel[0], verbose=VERBOSE, useGpu=useGpu)
 
             cl = config_loader.ConfigLoader()
             self.LearningDict = cl.learningParams(os.path.join(configdir, "LearningParams.txt"))
