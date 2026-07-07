@@ -52,7 +52,7 @@ Docs/FilterTraining.soc
 .github/
 
 archive/
-environ-10.yml
+# environment.yml
 
 *.egg
 *.egg-info

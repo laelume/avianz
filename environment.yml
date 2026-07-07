@@ -1,0 +1,34 @@
+name: avianz
+
+channels:
+  - conda-forge
+  - defaults
+  
+dependencies:
+  - python=3.10
+  - click
+  - Cython
+  - h5py
+  - jsonschema
+  - librosa
+  - lxml
+  - openpyxl
+  - matplotlib
+  - numba
+  - numpy
+  - pyfftw
+  - pyqtgraph
+  - resampy
+  - scipy
+  - scikit-image
+  # - pyFLAC
+  - libsndfile
+  # - pytorch
+  - setuptools
+  - pyqt=6
+  - qt6-multimedia
+  - pip
+
+  - pip:
+    - tensorflow
+    - torch
