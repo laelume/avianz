@@ -61,6 +61,17 @@ FIR_COEFFICIENTS = [
     0.00019, 0.00012, 0.000061, 0.0
 ]
 
+
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+# C O N F I G
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+VERBOSE = False           # toggle verbose debug logging on/off
+NN_MAX_WORKERS = None      # None -> fall back to os.cpu_count() at runtime, used only
+                           # for threading the CPU-bound feature-generation step below;
+                           # GPU predict_batch calls remain single-threaded intentionally
+
+
 class Segmenter:
     """Segmentation algorithms for audio analysis.
     
@@ -648,7 +659,8 @@ class PostProcess:
             self.segments.append([seg, cert])
 
         if NNmodel:
-            inference.configure_gpu_memory()
+            # inference.configure_gpu_memory()
+            NNmodel[0], self.device = inference.configure_gpu_memory(NNmodel[0], verbose=VERBOSE)
 
             cl = config_loader.ConfigLoader()
             self.LearningDict = cl.learningParams(os.path.join(configdir, "LearningParams.txt"))
@@ -825,6 +837,69 @@ class PostProcess:
 
         print("Segments remaining after NN: ", len(self.segments))
 
+
+    def NN(self):
+        if not self.NNmodel:
+            print("ERROR: no NN model specified")
+            return
+        if len(self.segments) == 0:
+            print("No segments to classify by NN")
+            return
+
+        ctkey = int(list(self.NNoutputs.keys())[list(self.NNoutputs.values()).index(self.calltype)])
+        print('call type: ', self.calltype)
+        batchsize = 5
+
+        # First pass: cheap, sequential -- expand short segments in place and slice
+        # audio_data per segment. Order preserved as reversed(range(...)) so that the
+        # eventual del self.segments[ix] calls in pass three stay index-safe.
+        pending = []
+        for ix in reversed(range(len(self.segments))):
+            seg = self.segments[ix]
+            duration = self.expand_short_segment(seg, self.NNwindow)
+
+            # Extract audio segment as AudioData object
+            start_sample = int(seg[0][0] * self.sampleRate)
+            end_sample = int(seg[0][1] * self.sampleRate)
+            segment_audio = audio_data.AudioData(
+                data=self.audioData.data[start_sample:end_sample],
+                sample_rate=self.sampleRate,
+                sample_format='float32',
+                sample_size=32,
+                channels=1
+            )
+            pending.append((ix, seg, segment_audio, duration))
+
+        # Second pass: CPU-bound spectrogram/feature generation threaded across segments.
+        # GPU inference itself (predict_nn_batched) is deliberately left out of this pool
+        # and stays sequential on the main thread in pass three below.
+        feature_args = [(entry[2], entry[3]) for entry in pending]
+        featuress_list = inference.generate_features_threaded(
+            feature_args, self.generate_nn_features, max_workers=NN_MAX_WORKERS
+        )
+
+        # Third pass: sequential GPU prediction + certainty scoring + deletion,
+        # in the same high-to-low ix order captured during pass one.
+        for (ix, seg, segment_audio, duration), featuress in zip(pending, featuress_list):
+            print('\n--- Segment', seg)
+
+            if featuress.shape != (featuress.shape[0], self.NNinputdim[0], self.NNinputdim[1], 1):
+                print("ERROR: features shape incorrect", featuress.shape)
+                raise AssertionError
+
+            probs = self.predict_nn_batched(featuress, batchsize)
+            certainty = self.compute_certainty_from_probs(probs, ctkey)
+
+            print("probabilities: ", probs)
+            if certainty == 0:
+                print('Deleted by NN')
+                del self.segments[ix]
+            else:
+                print('Not deleted by NN')
+                self.segments[ix][-1] = certainty
+
+        print("Segments remaining after NN: ", len(self.segments))
+
     def activelength(self, probs, thr):
         """
         Returns the max length (secs) above thr given the probabilities of the images (overlapped)
@@ -979,3 +1054,10 @@ class PostProcess:
         # Used for merging call types or different segmenter outputs
         self.segments = Segmenter.checkSegmentOverlap3(self.segments)
         print("Segments produced after merging: %d" % len(self.segments))
+
+
+# U S A G I
+# from avianz.src.models import inference
+#
+# model, device = inference.configure_gpu_memory(model, verbose=True)
+# print(f"inference running on: {device}")
