@@ -23,17 +23,19 @@
 
 import click
 
-# Command line running to run a filter is something like
-# python AviaNZ.py -c -b -d "/home/marslast/Projects/AviaNZ/Sound Files/train5" -r "Morepork" -w
+# Command line interface examples for species filters
+
+# For inference
+# python AviaNZ.py -c -b -d "/source/audio/directory" -r "Morepork" -w
 
 # For training
-# python AviaNZ.py -c -t -d "/home/marslast/Projects/AviaNZ/Sound Files/train5" -e "/home/marslast/Projects/AviaNZ/Sound Files/train6" -r "Morepork" -x 2
+# python AviaNZ.py -c -t -d "/source/audio/directory" -e "/secondary/source/audio/directory" -r "Morepork" -x 2
 
 # For testing
-# python AviaNZ.py -c -u -d "/home/marslast/Projects/AviaNZ/Sound Files/test1" -r "Kiwi (Tokoeka Rakiura)"
+# python AviaNZ.py -c -u -d "/source/audio/directory" -r "Kiwi (Tokoeka Rakiura)"
 
-# To generate images without GUI
-# python AviaNZ.py -c -s -f "folder"
+# Generate images without GUI
+# python AviaNZ.py -c -s -f "image_save_location"
 
 @click.command()
 @click.option('-c', '--cli', is_flag=True, help='Run in command-line mode')
@@ -59,6 +61,8 @@ import click
 @click.option('--subset/--no-subset', default=False, help='Enable time-limited subset processing')
 @click.option('--intermittent/--no-intermittent', default=False, help='Enable intermittent sampling')
 @click.option('--merge-syllables/--no-merge-syllables', default=False, help='Enable syllable merging')
+@click.option('-asd', '--annotation-save-dir', type=click.Path(), default=None, help='Custom directory to save annotation .data files into, instead of alongside source audio')
+@click.option('--gpu/--no-gpu', default=True, help='Allow GPU usage for NN inference if available; prompts for CPU fallback confirmation if not')
 @click.argument('command', nargs=-1)
 
 def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, training, testing, sdir1, sdir2, recogniser, wind, width, time_start, time_end, protocol_size, protocol_interval, maxgap, minlen, maxlen, subset, intermittent, merge_syllables, command):

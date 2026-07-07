@@ -66,11 +66,12 @@ FIR_COEFFICIENTS = [
 # C O N F I G
 # = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-VERBOSE = False           # toggle verbose debug logging on/off
-NN_MAX_WORKERS = None      # None -> fall back to os.cpu_count() at runtime, used only
-                           # for threading the CPU-bound feature-generation step below;
-                           # GPU predict_batch calls remain single-threaded intentionally
-
+VERBOSE = True          # toggle verbose debug logging on/off
+NN_MAX_WORKERS = 4      # None: falls back to os.cpu_count() at runtime, inside
+                        # generate_features_threaded(); controls thread pool size for
+                        # the CPU-bound feature-generation step in NN(). GPU predict_batch
+                        # calls remain single-threaded intentionally, since concurrent
+                        # calls into one CUDA context add risk without real throughput gain.
 
 class Segmenter:
     """Segmentation algorithms for audio analysis.
@@ -789,7 +790,19 @@ class PostProcess:
         else:
             return 0
 
+
     def NN(self):
+        """ Classify segments using the NN model, threading the CPU-bound feature-generation
+        step across segments while keeping GPU prediction sequential on the main thread.
+
+        Structured as three passes over self.segments:
+          1. sequential, cheap. expand_short_segment + audio slicing per segment
+          2. threaded. generate_nn_features (CPU-bound spectrogram construction)
+          3. sequential. predict_nn_batched (GPU) + certainty scoring + deletion
+
+        Pass three walks the same ix order captured in pass one, so del self.segments[ix]
+        stays index-safe exactly as it did in the original single-pass version.
+        """
         if not self.NNmodel:
             print("ERROR: no NN model specified")
             return
@@ -801,9 +814,12 @@ class PostProcess:
         print('call type: ', self.calltype)
         batchsize = 5
 
+        # Pass 1: sequential, cheap. expand_short_segment + audio slicing per segment.
+        # Captures (ix, seg, segment_audio, duration) in the original reversed(range(...))
+        # order so pass 3's del self.segments[ix] calls stay index-safe.
+        pending = []
         for ix in reversed(range(len(self.segments))):
             seg = self.segments[ix]
-            print('\n--- Segment', seg)
             
             duration = self.expand_short_segment(seg, self.NNwindow)
             
@@ -817,8 +833,19 @@ class PostProcess:
                 sample_size=32,
                 channels=1
             )
-            
-            featuress = self.generate_nn_features(segment_audio, duration)
+            pending.append((ix, seg, segment_audio, duration))
+
+        # Pass 2: threaded. generate_nn_features across segments (CPU-bound work,
+        # safe to parallelize; predict_nn_batched below stays off this pool since it
+        # is GPU-bound and single CUDA context should not be hit concurrently).
+        feature_args = [(entry[2], entry[3]) for entry in pending]
+        featuress_list = inference.generate_features_threaded(
+            feature_args, self.generate_nn_features, max_workers=NN_MAX_WORKERS
+        )
+
+        # Pass 3: sequential. GPU prediction, certainty scoring, deletion.
+        for (ix, seg, segment_audio, duration), featuress in zip(pending, featuress_list):
+            print('\n--- Segment', seg)
             
             if featuress.shape != (featuress.shape[0], self.NNinputdim[0], self.NNinputdim[1], 1):
                 print("ERROR: features shape incorrect", featuress.shape)
@@ -838,6 +865,7 @@ class PostProcess:
         print("Segments remaining after NN: ", len(self.segments))
 
 
+
     def NN(self):
         if not self.NNmodel:
             print("ERROR: no NN model specified")
@@ -850,7 +878,7 @@ class PostProcess:
         print('call type: ', self.calltype)
         batchsize = 5
 
-        # First pass: cheap, sequential -- expand short segments in place and slice
+        # First pass: cheap, sequential. expand short segments in place and slice
         # audio_data per segment. Order preserved as reversed(range(...)) so that the
         # eventual del self.segments[ix] calls in pass three stay index-safe.
         pending = []

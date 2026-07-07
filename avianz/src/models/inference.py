@@ -30,11 +30,48 @@ from avianz.src.models import inference
 import numpy as np
 
 
-def configure_gpu_memory():
-    """ Configure GPU memory settings for PyTorch. """
-    if torch.cuda.is_available():
-        torch.cuda.empty_cache()
+def configure_gpu_memory(model=None, verbose=None):
+    """ Select and configure inference device, moving model onto it if provided.
 
+    Preserves cache-clearing behaviour when called with no model (existing call
+    sites keep working unchanged), and additionally returns the resolved torch.device so
+    callers can track where inference is actually executing. Also moves model itself onto
+    that device, this was previously missing, which meant GPU was never actually engaged
+    even when available.
+
+    When no GPU is detected, prompts at the command line for y/n confirmation before
+    proceeding on CPU, rather than silently falling back.
+    """
+    if verbose is not None:
+        logger.setLevel(logging.DEBUG if verbose else logging.WARNING)
+
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+        torch.cuda.empty_cache()
+        logger.debug("GPU detected, running inference on cuda device")
+    else:
+        # FALLBACK: cpu execution path, engaged whenever cuda is unavailable.
+        # Requires explicit y/n confirmation at the command line before proceeding,
+        # rather than silently falling back to cpu.
+        response = input("No GPU detected. Proceed with CPU? [y/n]: ").strip().lower()
+        while response not in ("y", "n"):
+            response = input("Please enter 'y' or 'n': ").strip().lower()
+
+        if response == "n":
+            logger.debug("User declined cpu fallback, aborting")
+            raise RuntimeError("No GPU detected and CPU fallback declined")
+
+        device = torch.device("cpu")
+        print("Proceeding with CPU")
+        logger.debug("Proceeding with cpu device after user confirmation")
+        configure_cpu_threads()
+
+    if model is not None:
+        model.to(device)
+        return model, device
+
+    return device
+    
 # PyTorch inference utilities
 
 import os
