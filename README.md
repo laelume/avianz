@@ -41,11 +41,16 @@ Windows binaries are available at http://www.avianz.net.
 To install from source, follow the Linux instructions.
 
 - Remember to include a C compiler such as VS Build Tools, and make sure to check "Desktop development with C++"
-'''
+
 (PS)
+```
 winget install Microsoft.VisualStudio.2022.BuildTools
-<!-- OR POSSIBLY (PS): winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools" -->
-'''
+``
+
+OR POSSIBLY:
+```winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.VisualStudio.Workload.VCTools"
+```
+
 (then restart PC)
 
 ## macOS
