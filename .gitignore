@@ -59,3 +59,4 @@ archive/
 
 dist/
 trimmed_audio/
+annotations_out/
