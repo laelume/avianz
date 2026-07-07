@@ -60,3 +60,5 @@ archive/
 dist/
 trimmed_audio/
 annotations_out/
+
+avianz/src/core/bug_detector.py

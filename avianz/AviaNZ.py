@@ -48,7 +48,10 @@ import click
 @click.option('-u', '--testing', is_flag=True, help='Train a recogniser')
 @click.option('-d', '--sdir1', type=click.Path(), help='Input sound directory, training or batch processing')
 @click.option('-e', '--sdir2', type=click.Path(), help='Second input sound directory, training')
-@click.option('-r', '--recogniser', type=str, help='Recogniser name (without ".txt"), batch processing')
+
+# @click.option('-r', '--recogniser', type=str, help='Recogniser name (without ".txt"), batch processing')
+@click.option('-r', '--recogniser', type=str, multiple=True, help='Recogniser name(s) (without ".txt"), batch processing. Repeat -r for multiple species, e.g. -r "Kiwi (Nth Is Brown)" -r "Kiwi (Little Spotted)"')
+
 @click.option('-w', '--wind', is_flag=True, help='Apply wind filter')
 @click.option('-x', '--width', type=float, help='Width of windows for NN')
 @click.option('--time-start', type=int, default=0, help='Start time for subset (seconds from midnight, 0-86400)')
@@ -188,7 +191,10 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
         print("Starting AviaNZ in CLI mode")
         if batchmode:
             from src.cli.batch_cli import run_cli_batch
-            if os.path.isdir(sdir1) and recogniser in confloader.filters(filterdir).keys():
+            # if os.path.isdir(sdir1) and recogniser in confloader.filters(filterdir).keys():
+            # Added multi-species filter inclusion
+            if os.path.isdir(sdir1) and all(r in confloader.filters(filterdir).keys() for r in recogniser):
+
                 wind_str = "OLS wind filter (recommended)" if wind else "None"
 
                 # Confirms user-defined custom annotation direrctory
@@ -203,7 +209,7 @@ def mainlauncher(cli, cheatsheet, zooniverse, infile, imagefile, batchmode, trai
                 result = run_cli_batch(
                     configdir=configdir, 
                     directory=sdir1, 
-                    recognisers=[recogniser], 
+                    recognisers=list(recogniser), 
                     subset=subset, 
                     intermittent=intermittent, 
                     wind=wind_str, 
