@@ -1,6 +1,7 @@
 
 # Version 3.5 09/10/25
 # Authors: Stephen Marsland, Nirosha Priyadarshani, Julius Juodakis, Virginia Listanti, Giotto Frean
+# Updated July 2026 laelume aka Ashlae Blum(e)
 
 #    AviaNZ bioacoustic analysis program
 #    Copyright (C) 2017--2025
@@ -22,7 +23,18 @@
 
 import os
 import time
+import os
+import time
+import logging
 
+VERBOSE = True    # toggle verbose debug logging on/off for this module
+
+logger = logging.getLogger("batch_log")
+logger.setLevel(logging.DEBUG if VERBOSE else logging.WARNING)
+if not logger.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    logger.addHandler(_handler)
 
 class Log(object):
     """ Used for logging info during batch processing.
@@ -111,25 +123,98 @@ class Log(object):
                 # bad error: lacking permissions?
                 print("ERROR: could not open log at %s" % path)
 
-    def appendFile(self, filename):
+    # def appendFile(self, filename):
+    #     print('Appending %s to log' % filename)
+    #     # convert to path relative to the log file directory
+    #     if os.path.isabs(filename):
+    #         filename = os.path.relpath(filename, os.path.dirname(self.filepath))
+
+    #     # attach file path to end of log
+    #     self.file.write(filename)
+    #     self.file.write("\n")
+    #     self.file.flush()
+
+    def appendFile(self, filename, annotationsFound=None):
+        """ Appends a processed file to the log, with a timestamp and whether any annotations were found.
+
+        filename:         path to the processed file, converted to a path relative
+                           to the log file's directory before writing
+        annotationsFound: True/False if known, None to omit the field entirely
+                           (keeps old-format-compatible lines when the caller
+                           doesn't have this information)
+        """
         print('Appending %s to log' % filename)
         # convert to path relative to the log file directory
         if os.path.isabs(filename):
             filename = os.path.relpath(filename, os.path.dirname(self.filepath))
 
+        # tags annotation with date and time processed
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+        if annotationsFound is None:
+            line = f"{timestamp} | {filename}"
+        else:
+            line = f"{timestamp} | annotations={annotationsFound} | {filename}"
+
         # attach file path to end of log
-        self.file.write(filename)
+        self.file.write(line)
         self.file.write("\n")
         self.file.flush()
 
+    def appendDirectoryComplete(self, dirpath):
+        """ Appends a marker line noting that every file in a given directory has been processed.
+
+        dirpath: path to the completed directory, converted to a path relative
+                 to the log file's directory before writing, matching the same
+                 convention used by appendFile for individual files
+        """
+        if os.path.isabs(dirpath):
+            dirpath = os.path.relpath(dirpath, os.path.dirname(self.filepath))
+
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        line = f"## DIR COMPLETE: {dirpath} | {timestamp}"
+
+        self.file.write(line)
+        self.file.write("\n")
+        self.file.flush()
+        logger.debug("Directory marked complete: %s", dirpath)
+
+
+    # def getDoneFiles(self, possiblefiles):
+    #     """ Selects files that are stored in this log from possiblefiles.
+    #         Assumes possiblefiles stores absolute paths. """
+    #     currdir = os.path.dirname(self.filepath)
+    #     done_abs = [os.path.normpath(os.path.join(currdir, f)) for f in self.filesDone if not os.path.isabs(f)]
+    #     # assuming relative paths on both lists:
+    #     out = set(done_abs).intersection(set(possiblefiles))
+    #     return(out)
+
+
     def getDoneFiles(self, possiblefiles):
         """ Selects files that are stored in this log from possiblefiles.
-            Assumes possiblefiles stores absolute paths. """
+            Assumes possiblefiles stores absolute paths.
+
+        Parses both current-format lines (TIMESTAMP | annotations=bool | path,
+        or TIMESTAMP | path) and older bare-path lines from logs written before
+        this format existed. Directory-completion marker lines (## DIR COMPLETE...)
+        are skipped, since they are not individual file entries.
+        """
         currdir = os.path.dirname(self.filepath)
-        done_abs = [os.path.normpath(os.path.join(currdir, f)) for f in self.filesDone if not os.path.isabs(f)]
+
+        parsedPaths = []
+        for f in self.filesDone:
+            if f.startswith("## DIR COMPLETE"):
+                continue
+            # current format has one or two " | " separators; the path is
+            # always the last segment
+            path = f.rsplit(" | ", 1)[-1]
+            parsedPaths.append(path)
+
+        done_abs = [os.path.normpath(os.path.join(currdir, f)) for f in parsedPaths if not os.path.isabs(f)]
         # assuming relative paths on both lists:
         out = set(done_abs).intersection(set(possiblefiles))
         return(out)
+
 
     def appendHeader(self, header, species, settings):
         if header is None:

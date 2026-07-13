@@ -1,7 +1,7 @@
 
 # Version 3.5 09/10/25
 # Authors: Stephen Marsland, Nirosha Priyadarshani, Julius Juodakis, Virginia Listanti, Giotto Frean
-
+# Updated June 2026 laelume aka Ashlae Blum(e)
 #    AviaNZ bioacoustic analysis program
 #    Copyright (C) 2017--2025
 
@@ -169,24 +169,41 @@ class BatchProcessor:
 
 
     def define_annotation_save_location(self, filepath, suffix=".data"):
-        """Resolves output path for saved annotations. Default is next to audio files; uses custom directory if specified.
+        """Resolves output path for saved annotations. Default lives next to audio files; uses custom directory if specified.
 
         filepath: path to the source audio file being annotated
-        suffix:   file suffix to append to the resolved output path (".data" by default,
-                  overridden to ".tmpdata"/".tmp2data" in testmode via saveAnnotation)
+        suffix:   file suffix to append to the resolved output path 
+                  (".data" by default, overridden to ".tmpdata"/".tmp2data" 
+                  in testmode via saveAnnotation)
+    
+        Default (no custom annotation directory): saves alongside the source audio
+        file using its full path, which inherently avoids collisions between
+        identically-named files in different folders.
+        
+        Custom directory (self.annotationDir set): mirrors wav tree structure
+        as organizational strategy for annotation files. 
         """
         base = os.path.splitext(os.path.basename(filepath))[0]
 
-        # FALLBACK: default behaviour, lives alongside audio files
+        # FALLBACK: default behaviour, save alongside source audio file using its
+        # full path, inherently collision-proof since the full path is preserved
         if not self.annotationDir:
-            return os.path.join(self.dirName, base + suffix)
+            return filepath + suffix
 
-        # Create folder if save location is specified
-        if not os.path.isdir(self.annotationDir):
-            os.makedirs(self.annotationDir, exist_ok=True)
+        sourceDir = os.path.abspath(os.path.dirname(filepath))
+        drive, pathNoDrive = os.path.splitdrive(sourceDir)
+        # strip leading separator so os.path.join doesn't treat this as an
+        # absolute path and discard self.annotationDir
+        pathNoDrive = pathNoDrive.lstrip(os.sep).lstrip("/")
 
-        return os.path.join(self.annotationDir, base + suffix)
+        outDir = os.path.join(self.annotationDir, pathNoDrive)
         
+        # Ensure directory is created
+        if not os.path.isdir(outDir):
+            os.makedirs(outDir, exist_ok=True)
+
+        return os.path.join(outDir, base + suffix)
+
     def process_files(self):
         """Main processing method. Returns 0 on success, 1 on error."""
         filters = [self.FilterDicts[name] for name in self.species]
@@ -296,6 +313,17 @@ class BatchProcessor:
         timeWindow_s = self.options['timeWindow_s']
         timeWindow_e = self.options['timeWindow_e']
 
+        # Track remaining file counts per directory, so a directory-complete
+        # marker can be logged as soon as its last file finishes processing
+        remainingPerDir = {}
+        for f in allsoundfiles:
+            d = os.path.dirname(f)
+            remainingPerDir[d] = remainingPerDir.get(d, 0) + 1
+        for doneFile in self.filesDone:
+            d = os.path.dirname(doneFile)
+            if d in remainingPerDir:
+                remainingPerDir[d] -= 1
+
         for filename in allsoundfiles:
             if self.callbacks.check_cancelled():
                 print("Processing cancelled by user")
@@ -324,7 +352,14 @@ class BatchProcessor:
 
             success = self.process_single_file(filename, filters)
             if success:
-                self.log.appendFile(filename)
+                # self.log.appendFile(filename)
+                self.log.appendFile(filename, annotationsFound=self.lastAnnotationsFound)
+                # track progress
+                fileDir = os.path.dirname(filename)
+                if fileDir in remainingPerDir:
+                    remainingPerDir[fileDir] -= 1
+                    if remainingPerDir[fileDir] <= 0:
+                        self.log.appendDirectoryComplete(fileDir)
 
             processingTime = time.time() - processingTimeStart
             print(f"File processed in {processingTime}")
@@ -379,6 +414,7 @@ class BatchProcessor:
             
         return inWindow
 
+
     def process_single_file(self, filename, filters):
         """Process a single file. Returns True on success."""
         print("Loading file...")
@@ -400,7 +436,8 @@ class BatchProcessor:
         else:
             self.detectFile(filters)
 
-        print(f"{len(self.segments)-startCount} new segments marked")
+        newSegmentCount = len(self.segments) - startCount
+        print(f"{newSegmentCount} new segments marked")
         
         # Save annotations
         if self.testmode:
@@ -410,7 +447,15 @@ class BatchProcessor:
         else:
             self.saveAnnotation(filename, self.segments)
         
+        # annotationsFound reflects total segments present after processing,
+        # not just newly-added ones, since a resumed/appended file could
+        # already have prior segments loaded in loadFile
+        self.lastAnnotationsFound = len(self.segments) > 0        
+
         return True
+
+
+
 
     def detectFile(self, filters):
         """Actual worker for a file in the detection loop."""
@@ -504,11 +549,15 @@ class BatchProcessor:
         segmentList.metadata["Duration"] = self.sp.get_duration()
         segmentList.metadata["noiseLevel"] = None
         segmentList.metadata["noiseTypes"] = []
+        
+        # write annotation to wav source location; safe backup for now
         segmentList.saveJSON(str(filename) + suffix)
         
+        # write annotation to custom location
         outPath = self.define_annotation_save_location(filename, suffix=suffix)
         logger.debug("Saving annotation for %s to %s", filename, outPath)
         segmentList.saveJSON(outPath)
+        
         return 1
 
 

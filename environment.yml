@@ -1,4 +1,4 @@
-name: avianz
+name: pyavianz
 
 channels:
   - conda-forge
