@@ -167,12 +167,17 @@ class Log(object):
         dirpath: path to the completed directory, converted to a path relative
                  to the log file's directory before writing, matching the same
                  convention used by appendFile for individual files
+
+        Uses a ">>>" prefix rather than "#", since the log parser in __init__
+        identifies the start of a new analysis block by checking for a leading
+        "#" character; a marker line starting with "#" would be misread as a
+        new analysis header and corrupt the block structure.
         """
         if os.path.isabs(dirpath):
             dirpath = os.path.relpath(dirpath, os.path.dirname(self.filepath))
 
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        line = f"## DIR COMPLETE: {dirpath} | {timestamp}"
+        line = f">>> DIR COMPLETE: {dirpath} | {timestamp}"
 
         self.file.write(line)
         self.file.write("\n")
@@ -190,20 +195,21 @@ class Log(object):
     #     return(out)
 
 
+
     def getDoneFiles(self, possiblefiles):
         """ Selects files that are stored in this log from possiblefiles.
             Assumes possiblefiles stores absolute paths.
 
         Parses both current-format lines (TIMESTAMP | annotations=bool | path,
         or TIMESTAMP | path) and older bare-path lines from logs written before
-        this format existed. Directory-completion marker lines (## DIR COMPLETE...)
+        this format existed. Directory-completion marker lines (>>> DIR COMPLETE...)
         are skipped, since they are not individual file entries.
         """
         currdir = os.path.dirname(self.filepath)
 
         parsedPaths = []
         for f in self.filesDone:
-            if f.startswith("## DIR COMPLETE"):
+            if f.startswith(">>> DIR COMPLETE"):
                 continue
             # current format has one or two " | " separators; the path is
             # always the last segment

@@ -2,6 +2,7 @@
 # Version 3.5 09/10/25
 # Authors: Stephen Marsland, Nirosha Priyadarshani, Julius Juodakis, Virginia Listanti, Giotto Frean
 # Updated June 2026 laelume aka Ashlae Blum(e)
+
 #    AviaNZ bioacoustic analysis program
 #    Copyright (C) 2017--2025
 
