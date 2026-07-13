@@ -153,12 +153,19 @@ class BatchProcessor:
         self.bat_detector = bat_detector.BatDetector()
 
 
+
     def has_annotations(self, filepath):
-        """Check if annotations likely exist for this file."""
+        """Checks if annotations may exist for this file, use custom annotation directory if one was set.
+
+        Checks the resolved annotation save location (via define_annotation_save_location)
+        rather than only the default alongside-audio path, so this correctly reflects
+        prior results when --annotation-save-dir is in use.
+        """
+        resolvedDataPath = self.define_annotation_save_location(filepath, suffix=".data")
         base, _ = os.path.splitext(filepath)
 
         possible = [
-            base + ".data",
+            resolvedDataPath,
             base + ".txt",
             base + ".csv",
             base + ".json",
@@ -167,6 +174,7 @@ class BatchProcessor:
         ]
 
         return any(os.path.exists(p) for p in possible)
+
 
 
     def define_annotation_save_location(self, filepath, suffix=".data"):
@@ -261,16 +269,24 @@ class BatchProcessor:
 
         # Provides updates about whether there are existing annotations
         if self.overwriteAll:
-            if any_existing_annotations:
-                message += "\nWarning: ALL previous annotations in these files will be deleted!\n"
+
+            filesToActuallyProcess = total - len(self.filesDone)
+            if any_existing_annotations and filesToActuallyProcess > 0:
+                message += f"\nWarning: ALL previous annotations will be deleted in the {filesToActuallyProcess} file(s) not already marked done!\n"
+            elif any_existing_annotations and filesToActuallyProcess == 0:
+                message += "\nAll files already marked done in log; no files will be reprocessed or overwritten this run.\n"
             else:
                 message += "\nNo existing annotations found (nothing will be overwritten).\n"
 
         elif self.overwriteSpecies:
-            if any_existing_annotations:
-                message += "\nWarning: any previous annotations for the selected species in these files will be deleted!\n"
+            filesToActuallyProcess = total - len(self.filesDone)
+            if any_existing_annotations and filesToActuallyProcess > 0:
+                message += f"\nWarning: any previous annotations for the selected species will be deleted in the {filesToActuallyProcess} file(s) not already marked done!\n"
+            elif any_existing_annotations and filesToActuallyProcess == 0:
+                message += "\nAll files already marked done in log; no files will be reprocessed or overwritten this run.\n"
             else:
                 message += "\nNo existing annotations for selected species found.\n"
+
 
         if any_existing_annotations and not (self.overwriteAll or self.overwriteSpecies):
             message += "\nExisting annotations detected. Run with overwrite enabled to replace them.\n"
@@ -284,7 +300,21 @@ class BatchProcessor:
             return 1
 
         self.log.file = open(self.log.filepath, 'w') 
+
+        # Restore other species' previously logged analyses, which open('w')
+        # would otherwise silently discard
+        self.log.reprintOld()
+        
         self.log.appendHeader(header=None, species=self.log.species, settings=self.log.settings)
+
+
+        # If resuming, re-write the previously completed files for this species
+        # back into the log immediately, so progress from the prior run isn't
+        # lost from disk if this run is interrupted before reaching new files
+        for doneFile in self.filesDone:
+            self.log.file.write(doneFile)
+            self.log.file.write("\n")
+        self.log.file.flush()
 
         self.callbacks.update_progress(cnt, total, "Preparing for analysis...")
 
@@ -516,10 +546,23 @@ class BatchProcessor:
         self.segments = annotation.SegmentList()
         
         duration = self.sp.get_duration()
+
+
+        # Resolve the actual annotation path, honouring annotationDir if set,
+        # rather than assuming the default alongside-audio location. Without
+        # this, a custom --annotation-save-dir would never be checked here,
+        # and prior results saved there would be silently overwritten with
+        # no overwriteSpecies/overwriteAll logic ever applying to them.
+        existingAnnotationPath = self.define_annotation_save_location(filename, suffix=".data")
+
+
+        # # If overwriteAll is set, or if we're in bat/anysound mode, or no .data file exists:
+        # # wipe everything
+        # if self.overwriteAll or bats or anysound or not os.path.isfile(filename + '.data'):
         
-        # If overwriteAll is set, or if we're in bat/anysound mode, or no .data file exists:
-        # wipe everything
-        if self.overwriteAll or bats or anysound or not os.path.isfile(filename + '.data'):
+        # If overwriteAll is set, or if we're in bat/anysound mode, or no existing
+        # annotation file exists at the resolved location: wipe everything
+        if self.overwriteAll or bats or anysound or not os.path.isfile(existingAnnotationPath):
             self.segments.metadata["Operator"] = "Auto"
             self.segments.metadata["Reviewer"] = ""
             self.segments.metadata["Duration"] = duration
@@ -527,7 +570,8 @@ class BatchProcessor:
             self.segments.clear()
         else:
             # Load existing annotations
-            hasmetadata = self.segments.parseJSON(filename+'.data', duration)
+            # hasmetadata = self.segments.parseJSON(filename+'.data', duration)
+            hasmetadata = self.segments.parseJSON(existingAnnotationPath, duration)
             if not hasmetadata:
                 self.segments.metadata["Operator"] = "Auto"
                 self.segments.metadata["Reviewer"] = ""

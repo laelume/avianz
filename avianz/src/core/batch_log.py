@@ -168,21 +168,33 @@ class Log(object):
                  to the log file's directory before writing, matching the same
                  convention used by appendFile for individual files
 
-        Uses a ">>>" prefix rather than "#", since the log parser in __init__
-        identifies the start of a new analysis block by checking for a leading
-        "#" character; a marker line starting with "#" would be misread as a
-        new analysis header and corrupt the block structure.
+        When dirpath is the same directory the log file itself lives in (the
+        common case for a single flat directory batch run), a relative path
+        collapses to ".", which carries no descriptive information. In that
+        case, the directory's own folder name is used instead, so the marker
+        stays meaningful.
+
+        Uses a ">>>" prefix since the log parser in __init__ identifies the start 
+        of a new analysis block by checking for a leading "#" character; 
+        a marker line starting with "#" would be misread as a new analysis 
+        header and corrupt the block structure.
         """
-        if os.path.isabs(dirpath):
-            dirpath = os.path.relpath(dirpath, os.path.dirname(self.filepath))
+        logDir = os.path.dirname(self.filepath)
+
+        if os.path.abspath(dirpath) == os.path.abspath(logDir):
+            label = os.path.basename(os.path.normpath(dirpath))
+        elif os.path.isabs(dirpath):
+            label = os.path.relpath(dirpath, logDir)
+        else:
+            label = dirpath
 
         timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-        line = f">>> DIR COMPLETE: {dirpath} | {timestamp}"
+        line = f">>> DIR COMPLETE: {label} | {timestamp}"
 
         self.file.write(line)
         self.file.write("\n")
         self.file.flush()
-        logger.debug("Directory marked complete: %s", dirpath)
+        logger.debug("Directory marked complete: %s", label)
 
 
     # def getDoneFiles(self, possiblefiles):
