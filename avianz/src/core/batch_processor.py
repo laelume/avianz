@@ -314,7 +314,9 @@ class BatchProcessor:
         timeWindow_e = self.options['timeWindow_e']
 
         # Track remaining file counts per directory, so a directory-complete
-        # marker can be logged as soon as its last file finishes processing
+        # marker can be logged as soon as every file in it has been handled,
+        # whether processed successfully or skipped (already done, invalid,
+        # or outside the time window)
         remainingPerDir = {}
         for f in allsoundfiles:
             d = os.path.dirname(f)
@@ -323,6 +325,15 @@ class BatchProcessor:
             d = os.path.dirname(doneFile)
             if d in remainingPerDir:
                 remainingPerDir[d] -= 1
+
+        # new function to track progress and completion
+        def markHandled(filepath):
+            """ Decrements the remaining-file count for filepath's directory, and logs a directory-complete marker once that count reaches zero. """
+            fileDir = os.path.dirname(filepath)
+            if fileDir in remainingPerDir:
+                remainingPerDir[fileDir] -= 1
+                if remainingPerDir[fileDir] <= 0:
+                    self.log.appendDirectoryComplete(fileDir)
 
         for filename in allsoundfiles:
             if self.callbacks.check_cancelled():
@@ -344,22 +355,20 @@ class BatchProcessor:
 
             # Validate file
             if not self.validate_file(filename):
+                markHandled(filename)
                 continue
 
             # Check time window for DOC recordings
             if not self.check_time_window(filename, timeWindow_s, timeWindow_e):
+                markHandled(filename)
                 continue
 
             success = self.process_single_file(filename, filters)
             if success:
                 # self.log.appendFile(filename)
                 self.log.appendFile(filename, annotationsFound=self.lastAnnotationsFound)
-                # track progress
-                fileDir = os.path.dirname(filename)
-                if fileDir in remainingPerDir:
-                    remainingPerDir[fileDir] -= 1
-                    if remainingPerDir[fileDir] <= 0:
-                        self.log.appendDirectoryComplete(fileDir)
+                markHandled(filename)
+
 
             processingTime = time.time() - processingTimeStart
             print(f"File processed in {processingTime}")
